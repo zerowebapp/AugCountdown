@@ -12,7 +12,6 @@
       --progress-bar-bg: #444;
       --progress-bar-fill: #4caf50;
     }
-
     body {
       margin: 0;
       padding: 0;
@@ -26,23 +25,19 @@
       justify-content: center;
       height: 100vh;
     }
-
     h1 {
       font-size: 2.5em;
       color: var(--accent-color);
       margin-bottom: 0.5em;
     }
-
     #days {
       font-size: 5em;
       font-weight: bold;
     }
-
     #label {
       font-size: 1.2em;
       margin-top: -10px;
     }
-
     #progress-container {
       margin-top: 30px;
       width: 80%;
@@ -51,19 +46,16 @@
       border-radius: 10px;
       overflow: hidden;
     }
-
     #progress-bar {
       height: 100%;
       background-color: var(--progress-bar-fill);
       width: 0%;
       transition: width 1s ease;
     }
-
     #progress-text {
       margin-top: 10px;
       font-size: 1em;
     }
-
     @media (min-width: 768px) {
       h1 {
         font-size: 3.5em;
@@ -84,43 +76,105 @@
   <h1>Countdown to Start of Academic Year</h1>
   <div id="days">Loading...</div>
   <div id="label">Days Until August 29, 2025</div>
-
   <div id="progress-container">
     <div id="progress-bar"></div>
   </div>
   <div id="progress-text">Loading...</div>
-
-  <script src="https://cdn.jsdelivr.net/npm/luxon@3.3.0/build/global/luxon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
   <script>
-    const { DateTime } = luxon;
-
+    // Check if Luxon loaded, if not use fallback
     const CONFIG = {
       targetDate: "2025-08-29",
+      startDate: "2025-05-23", // Start date as reference point
       timezone: "Europe/Dublin"
     };
 
     function updateCountdown() {
-      const now = DateTime.now().setZone(CONFIG.timezone).startOf('day');
-      const target = DateTime.fromISO(CONFIG.targetDate, { zone: CONFIG.timezone });
-
-      const daysLeft = Math.max(0, target.diff(now, 'days').toObject().days);
-      document.getElementById("days").textContent = Math.floor(daysLeft);
-
-      // Progress from today to target
-      const totalDays = target.diff(now, 'days').toObject().days;
-      const daysPassed = 0; // starting today
-      const progressPercent = 0;
-
-      // Since we're using today as the start, totalDays = daysLeft
-      const percentComplete = (1 - (daysLeft / totalDays)) * 100;
-      const displayPercent = Math.min(100, Math.max(0, percentComplete)).toFixed(1);
-
-      document.getElementById("progress-bar").style.width = `${displayPercent}%`;
-      document.getElementById("progress-text").textContent = `${displayPercent}% of countdown complete`;
+      try {
+        let now, target, start;
+        
+        if (typeof luxon !== 'undefined' && luxon.DateTime) {
+          // Use Luxon if available
+          const { DateTime } = luxon;
+          now = DateTime.now().setZone(CONFIG.timezone).startOf('day');
+          target = DateTime.fromISO(CONFIG.targetDate, { zone: CONFIG.timezone });
+          start = DateTime.fromISO(CONFIG.startDate, { zone: CONFIG.timezone });
+          
+          // Calculate days left
+          const daysLeft = Math.max(0, Math.floor(target.diff(now, 'days').days));
+          document.getElementById("days").textContent = daysLeft;
+          
+          // Calculate progress from start date to target date
+          const totalDays = Math.floor(target.diff(start, 'days').days);
+          const daysPassed = Math.floor(now.diff(start, 'days').days);
+          
+          // Calculate percentage
+          let progressPercent = 0;
+          if (totalDays > 0) {
+            progressPercent = Math.min(100, Math.max(0, (daysPassed / totalDays) * 100));
+          }
+          
+          // If we've passed the target date, show 100%
+          if (now >= target) {
+            progressPercent = 100;
+          }
+          
+          const displayPercent = progressPercent.toFixed(1);
+          document.getElementById("progress-bar").style.width = `${displayPercent}%`;
+          document.getElementById("progress-text").textContent = `${displayPercent}% from start date to target date (${daysPassed}/${totalDays} days)`;
+          
+          // Update label if target date has passed
+          if (daysLeft === 0 && now >= target) {
+            document.getElementById("label").textContent = "Academic Year Has Started!";
+            document.getElementById("days").textContent = "🎓";
+          }
+        } else {
+          // Fallback to regular JavaScript Date
+          now = new Date();
+          target = new Date(CONFIG.targetDate);
+          start = new Date(CONFIG.startDate);
+          
+          // Set to start of day
+          now.setHours(0, 0, 0, 0);
+          target.setHours(0, 0, 0, 0);
+          start.setHours(0, 0, 0, 0);
+          
+          // Calculate days left
+          const timeDiff = target.getTime() - now.getTime();
+          const daysLeft = Math.max(0, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
+          document.getElementById("days").textContent = daysLeft;
+          
+          // Calculate progress
+          const totalDays = Math.ceil((target.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+          const daysPassed = Math.ceil((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+          
+          let progressPercent = 0;
+          if (totalDays > 0) {
+            progressPercent = Math.min(100, Math.max(0, (daysPassed / totalDays) * 100));
+          }
+          
+          if (now >= target) {
+            progressPercent = 100;
+          }
+          
+          const displayPercent = progressPercent.toFixed(1);
+          document.getElementById("progress-bar").style.width = `${displayPercent}%`;
+          document.getElementById("progress-text").textContent = `${displayPercent}% from start date to target date (${daysPassed}/${totalDays} days)`;
+          
+          // Update label if target date has passed
+          if (daysLeft === 0 && now >= target) {
+            document.getElementById("label").textContent = "Academic Year Has Started!";
+            document.getElementById("days").textContent = "🎓";
+          }
+        }
+      } catch (error) {
+        console.error('Error updating countdown:', error);
+        document.getElementById("progress-text").textContent = `Error: ${error.message}`;
+      }
     }
-
+    
     updateCountdown();
-    setInterval(updateCountdown, 86400000); // once per day
+    setInterval(updateCountdown, 86400000); // Update once per day
   </script>
 </body>
 </html>
