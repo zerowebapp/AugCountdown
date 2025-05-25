@@ -65,22 +65,7 @@
       margin-top: 1.1em;
       min-height: 1.5em;
     }
-    .cta-btn {
-      display: inline-block;
-      margin-top: 1.2em;
-      padding: 0.7em 2em;
-      background: #0074D9;
-      color: #fff;
-      font-size: 1.1em;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background 0.2s;
-    }
-    .cta-btn:hover, .cta-btn:focus {
-      background: #005fa3;
-    }
+    /* .cta-btn styles can stay or be removed if you want */
     @media (max-width: 600px) {
       #countdown {
         gap: 8px;
@@ -125,7 +110,7 @@
       </div>
     </div>
     <p id="countdown-message">Loading...</p>
-    <a href="#" class="cta-btn" aria-label="Register Now">Register Now</a>
+    <!-- "Register Now" button removed -->
   </div>
   <script>
     function animateFlip(element) {
@@ -152,7 +137,7 @@
         minutesElem.textContent = "00";
         secondsElem.textContent = "00";
         messageElem.textContent = "The academic year has started!";
-        document.querySelector('.cta-btn').style.display = 'none';
+        // Button already removed, so nothing to hide
         return;
       }
 
